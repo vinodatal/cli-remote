@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Copilot Session Portal</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🤖</text></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-web-links@0.11.0/lib/addon-web-links.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <span class="logo">🤖</span>
+                <h1>Copilot Session Portal</h1>
+                <span class="badge" id="connectionBadge">connecting…</span>
+            </div>
+            <div class="header-right">
+                <input type="search" id="globalSearch" placeholder="Search sessions…" autocomplete="off">
+                <button id="themeToggle" class="theme-toggle" title="Toggle theme">🌙</button>
+            </div>
+        </header>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-value" id="statTotal">–</div>
+                <div class="stat-label">Total Sessions</div>
+            </div>
+            <div class="stat-card highlight">
+                <div class="stat-value" id="statActive">–</div>
+                <div class="stat-label">Active States</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat24h">–</div>
+                <div class="stat-label">Last 24h</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statTurns">–</div>
+                <div class="stat-label">Total Turns</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statFiles">–</div>
+                <div class="stat-label">Files Touched</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-layout">
+            <!-- Session List (left panel) -->
+            <aside class="session-list-panel">
+                <div class="panel-header">
+                    <h2>Sessions</h2>
+                    <div style="display:flex;gap:6px">
+                        <button id="chatBtn" class="icon-btn chat-btn" title="Launch Copilot" onclick="openTerminal('copilot')">🤖</button>
+                        <button id="terminalBtn" class="icon-btn terminal-btn" title="Open Shell">⌨</button>
+                        <button id="refreshBtn" class="icon-btn" title="Refresh">↻</button>
+                    </div>
+                </div>
+                <div id="sessionList" class="session-list">
+                    <div class="loading">Loading sessions…</div>
+                </div>
+                <div class="pagination" id="pagination"></div>
+            </aside>
+
+            <!-- Session Detail (right panel) -->
+            <main class="detail-panel" id="detailPanel">
+                <div class="empty-state">
+                    <div class="empty-icon">📋</div>
+                    <h3>Select a session</h3>
+                    <p>Choose a session from the list to view details, or click ⌨ to open a remote terminal.</p>
+                </div>
+            </main>
+        </div>
+
+        <!-- Terminal panel (docked bottom, multi-tab) -->
+        <div class="term-panel" id="termPanel" style="display:none">
+            <div class="term-tab-bar">
+                <div class="term-tabs" id="termTabs"></div>
+                <div class="term-tab-actions">
+                    <button class="icon-btn" id="termNewShell" title="New Shell">⌨+</button>
+                    <button class="icon-btn" id="termNewCopilot" title="New Copilot">🤖+</button>
+                    <button class="icon-btn" id="termMinMax" title="Maximize">▲</button>
+                    <button class="icon-btn" id="termClose" title="Close tab">✕</button>
+                </div>
+            </div>
+            <div id="termContent" class="term-content"></div>
+        </div>
+
+        <!-- Chat overlay -->
+        <div class="terminal-overlay" id="chatOverlay" style="display:none">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <div class="chat-header-left">
+                        <span>💬 Copilot Chat</span>
+                        <span class="chat-status" id="chatStatus">not connected</span>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center">
+                        <select id="chatModel" class="chat-select" title="Model">
+                            <option value="claude-sonnet-4">Claude Sonnet 4</option>
+                            <option value="gpt-4.1">GPT 4.1</option>
+                            <option value="claude-sonnet-4.5">Claude Sonnet 4.5</option>
+                            <option value="claude-opus-4.6">Claude Opus 4.6</option>
+                        </select>
+                        <button class="icon-btn" id="chatCloseBtn" title="Close">✕</button>
+                    </div>
+                </div>
+                <div id="chatMessages" class="chat-messages">
+                    <div class="chat-welcome">
+                        <div class="empty-icon">🤖</div>
+                        <h3>Remote Copilot Chat</h3>
+                        <p>Send messages to Copilot from any device. Full tool access — file editing, terminal, search, and more.</p>
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <textarea id="chatInput" class="chat-input" placeholder="Send a message to Copilot…" rows="1"></textarea>
+                    <button id="chatSendBtn" class="chat-send-btn" title="Send">▶</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

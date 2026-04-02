@@ -1,0 +1,13 @@
+node_modules/
+*.log
+.env
+.github/agents/
+.github/skills/
+.github/chatmodes/
+.github/presets/
+.github/instructions/
+.github/extensions/
+.github/prompts/
+.github/constitution.md
+.github/copilot-instructions.md
+.vscode/

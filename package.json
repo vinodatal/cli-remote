@@ -1,0 +1,47 @@
+{
+  "name": "copilot-session-portal",
+  "version": "1.0.0",
+  "description": "Access your GitHub Copilot CLI sessions from any device — browse, monitor, and interact remotely",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "npx eslint src/ tests/",
+    "setup": "node scripts/setup.js",
+    "demo": "node scripts/demo-record.js",
+    "tunnel": "node scripts/setup.js --tunnel"
+  },
+  "keywords": [
+    "copilot",
+    "cli",
+    "remote",
+    "terminal",
+    "portal",
+    "session",
+    "github"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@github/copilot-sdk": "^0.2.0",
+    "better-sqlite3": "^12.8.0",
+    "express": "^5.2.1",
+    "highlight.js": "^11.11.1",
+    "marked": "^17.0.5",
+    "node-pty": "^1.1.0",
+    "ws": "^8.20.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.59.1",
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.2"
+  }
+}

@@ -16,22 +16,26 @@ A self-hosted web portal that lets you browse, monitor, and interact with your C
 ![Dashboard](docs/demo/01-dashboard.png)
 
 ### Session Detail with Markdown Conversation
-![Conversation](docs/demo/04-conversation.png)
+![Conversation](docs/demo/05-conversation.png)
 
 ### Files Tab with Download
-![Files](docs/demo/05-files.png)
+![Files](docs/demo/06-files.png)
+
+### Collapsible Sidebar
+![Sidebar Collapsed](docs/demo/07-sidebar-collapsed.png)
 
 ### Light Theme
-![Light Theme](docs/demo/07-light-theme.png)
+![Light Theme](docs/demo/08-light-theme.png)
 
 ### Multi-Tab Terminal
-![Terminal](docs/demo/09-multi-tab.png)
+![Multi-Tab Terminal](docs/demo/10-multi-tab.png)
+
+### Maximized Terminal
+![Maximized](docs/demo/11-maximized.png)
 
 ### 🎬 Demo Video
 
-https://github.com/user-attachments/assets/demo.webm
-
-> *Can't see the video? [Download it directly](docs/demo/demo.webm)*
+> *[Download demo video](docs/demo/demo.webm)*
 
 ---
 

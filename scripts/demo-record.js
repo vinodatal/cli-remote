@@ -3,7 +3,7 @@
  * 
  * Generates screenshots and a video walkthrough of the portal.
  * 
- * Usage: node demo-record.js
+ * Usage: node scripts/demo-record.js
  * Output: docs/demo/ directory with screenshots + demo.webm video
  */
 
@@ -25,105 +25,97 @@ async function main() {
     });
 
     const page = await context.newPage();
-
     console.log("📸 Recording demo...\n");
 
-    // ── 1. Dashboard (dark) ──
-    console.log("  1/9  Dashboard overview (dark)");
+    // ── 1. Dashboard (dark, stats hidden) ──
+    console.log("  1/11  Dashboard overview");
     await page.goto(BASE_URL);
-    await page.waitForSelector(".stat-value");
+    await page.waitForSelector(".session-item", { timeout: 10000 });
     await sleep(1500);
     await page.screenshot({ path: path.join(OUTPUT_DIR, "01-dashboard.png") });
 
-    // ── 2. Search sessions ──
-    console.log("  2/9  Searching sessions");
+    // ── 2. Toggle stats bar ──
+    console.log("  2/11  Stats bar toggle");
+    await page.click("#statsToggle");
+    await sleep(1000);
+    await page.screenshot({ path: path.join(OUTPUT_DIR, "02-stats.png") });
+    await page.click("#statsToggle"); // hide again
+    await sleep(500);
+
+    // ── 3. Search sessions ──
+    console.log("  3/11  Search sessions");
     await page.fill("#globalSearch", "SecurityMarketplace");
     await sleep(1500);
-    await page.screenshot({ path: path.join(OUTPUT_DIR, "02-search.png") });
+    await page.screenshot({ path: path.join(OUTPUT_DIR, "03-search.png") });
     await page.fill("#globalSearch", "");
     await sleep(500);
 
-    // ── 3. Select a session ──
-    console.log("  3/9  Session detail view");
+    // ── 4. Session detail ──
+    console.log("  4/11  Session detail");
     const firstSession = await page.$(".session-item");
     if (firstSession) {
         await firstSession.click();
-        await page.waitForSelector(".detail-header");
+        await page.waitForSelector(".detail-header", { timeout: 5000 });
         await sleep(1500);
-        await page.screenshot({ path: path.join(OUTPUT_DIR, "03-session-detail.png") });
+        await page.screenshot({ path: path.join(OUTPUT_DIR, "04-session-detail.png") });
     }
 
-    // ── 4. Conversation with markdown ──
-    console.log("  4/9  Conversation (markdown)");
-    await sleep(1000);
-    const conversationTab = await page.$('.tab[data-tab="conversation"]');
-    if (conversationTab) {
-        await conversationTab.click();
-        await sleep(2000);
-        await page.screenshot({ path: path.join(OUTPUT_DIR, "04-conversation.png") });
-    }
+    // ── 5. Conversation (markdown) ──
+    console.log("  5/11  Conversation");
+    const convTab = await page.$('.tab[data-tab="conversation"]');
+    if (convTab) { await convTab.click(); await sleep(2000); }
+    await page.screenshot({ path: path.join(OUTPUT_DIR, "05-conversation.png") });
 
-    // ── 5. Files tab ──
-    console.log("  5/9  Files tab");
+    // ── 6. Files tab ──
+    console.log("  6/11  Files tab");
     const filesTab = await page.$('.tab[data-tab="files"]');
-    if (filesTab) {
-        await filesTab.click();
-        await sleep(1500);
-        await page.screenshot({ path: path.join(OUTPUT_DIR, "05-files.png") });
-    }
+    if (filesTab) { await filesTab.click(); await sleep(1500); }
+    await page.screenshot({ path: path.join(OUTPUT_DIR, "06-files.png") });
 
-    // ── 6. Checkpoints tab ──
-    console.log("  6/9  Checkpoints tab");
-    const checkpointsTab = await page.$('.tab[data-tab="checkpoints"]');
-    if (checkpointsTab) {
-        await checkpointsTab.click();
-        await sleep(1500);
-        await page.screenshot({ path: path.join(OUTPUT_DIR, "06-checkpoints.png") });
-    }
+    // ── 7. Collapse sidebar ──
+    console.log("  7/11  Sidebar collapsed");
+    await page.click("#sidebarToggle");
+    await sleep(800);
+    await page.screenshot({ path: path.join(OUTPUT_DIR, "07-sidebar-collapsed.png") });
+    await page.click("#sidebarToggle"); // restore
+    await sleep(500);
 
-    // ── 7. Light theme ──
-    console.log("  7/9  Light theme toggle");
-    const themeBtn = await page.$("#themeToggle");
-    if (themeBtn) {
-        await themeBtn.click();
-        await sleep(1500);
-        // Go back to dashboard for light screenshot
-        if (conversationTab) await conversationTab.click();
-        await sleep(1000);
-        await page.screenshot({ path: path.join(OUTPUT_DIR, "07-light-theme.png") });
-        // Switch back to dark
-        await themeBtn.click();
-        await sleep(500);
-    }
+    // ── 8. Light theme ──
+    console.log("  8/11  Light theme");
+    await page.click("#themeToggle");
+    await sleep(1500);
+    if (convTab) { await convTab.click(); await sleep(1000); }
+    await page.screenshot({ path: path.join(OUTPUT_DIR, "08-light-theme.png") });
+    await page.click("#themeToggle"); // back to dark
+    await sleep(500);
 
-    // ── 8. Open a shell terminal tab ──
-    console.log("  8/9  Terminal panel");
-    const shellBtn = await page.$("#terminalBtn");
-    if (shellBtn) {
-        await shellBtn.click();
-        await sleep(2500);
-        await page.screenshot({ path: path.join(OUTPUT_DIR, "08-terminal.png") });
-    }
+    // ── 9. Open shell terminal ──
+    console.log("  9/11  Terminal panel");
+    await page.click("#terminalBtn");
+    await sleep(3000);
+    await page.screenshot({ path: path.join(OUTPUT_DIR, "09-terminal.png") });
 
-    // ── 9. Open second tab (copilot) ──
-    console.log("  9/9  Multi-tab terminal");
-    const copilotPlusBtn = await page.$("#termNewCopilot");
-    if (copilotPlusBtn) {
-        await copilotPlusBtn.click();
-        await sleep(2500);
-        await page.screenshot({ path: path.join(OUTPUT_DIR, "09-multi-tab.png") });
-    }
+    // ── 10. Open second tab ──
+    console.log("  10/11 Multi-tab terminal");
+    await page.click("#termNewCopilot");
+    await sleep(3000);
+    await page.screenshot({ path: path.join(OUTPUT_DIR, "10-multi-tab.png") });
+
+    // ── 11. Maximize terminal ──
+    console.log("  11/11 Maximized terminal");
+    await page.click("#termMinMax");
+    await sleep(1000);
+    await page.screenshot({ path: path.join(OUTPUT_DIR, "11-maximized.png") });
 
     await sleep(1000);
-
-    // Finalize
     await context.close();
 
-    // Rename video file
+    // Rename video
     const videos = fs.readdirSync(OUTPUT_DIR).filter(f => f.endsWith(".webm"));
     if (videos.length > 0) {
         const src = path.join(OUTPUT_DIR, videos[videos.length - 1]);
         const dest = path.join(OUTPUT_DIR, "demo.webm");
+        if (src !== dest && fs.existsSync(dest)) fs.unlinkSync(dest);
         if (src !== dest) fs.renameSync(src, dest);
         console.log(`\n✅ Video: docs/demo/demo.webm`);
     }
@@ -133,11 +125,7 @@ async function main() {
     pngs.forEach(f => console.log(`   📸 ${f}`));
 
     await browser.close();
-
-    console.log(`\nDone! Use these in your README:\n`);
-    console.log(`  ![Dashboard](docs/demo/01-dashboard.png)`);
-    console.log(`  ![Conversation](docs/demo/04-conversation.png)`);
-    console.log(`  ![Files](docs/demo/05-files.png)\n`);
+    console.log("\nDone!\n");
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }

@@ -38,6 +38,16 @@ document.addEventListener("DOMContentLoaded", () => {
     setupTheme();
     document.getElementById("chatBtn").addEventListener("click", () => openTerminal("copilot"));
     document.getElementById("refreshBtn").addEventListener("click", () => { loadStats(); loadSessions(); });
+
+    // Sidebar toggle
+    document.getElementById("sidebarToggle").addEventListener("click", toggleSidebar);
+    document.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "b") { e.preventDefault(); toggleSidebar(); }
+    });
+    // Restore sidebar state
+    if (localStorage.getItem("sidebarCollapsed") === "true") {
+        document.querySelector(".main-layout").classList.add("sidebar-collapsed");
+    }
 });
 
 // ── WebSocket ──
@@ -330,6 +340,16 @@ function setupTheme() {
     document.getElementById("themeToggle").addEventListener("click", () => {
         applyTheme(getTheme() === "dark" ? "light" : "dark");
     });
+}
+
+// ── Sidebar Toggle ──
+function toggleSidebar() {
+    const layout = document.querySelector(".main-layout");
+    layout.classList.toggle("sidebar-collapsed");
+    localStorage.setItem("sidebarCollapsed", layout.classList.contains("sidebar-collapsed"));
+    // Refit active terminal if any
+    const entry = terminals.get(activeTabId);
+    if (entry) setTimeout(() => entry.fitAddon.fit(), 350);
 }
 function truncate(s, n) { return s && s.length > n ? s.slice(0, n) + "\n\n… [truncated]" : s || ""; }
 function formatNumber(n) { return n >= 1000 ? (n / 1000).toFixed(1) + "k" : String(n); }

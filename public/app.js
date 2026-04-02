@@ -39,6 +39,17 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("chatBtn").addEventListener("click", () => openTerminal("copilot"));
     document.getElementById("refreshBtn").addEventListener("click", () => { loadStats(); loadSessions(); });
 
+    // Stats toggle
+    document.getElementById("statsToggle").addEventListener("click", () => {
+        const bar = document.getElementById("statsBar");
+        const visible = bar.style.display !== "none";
+        bar.style.display = visible ? "none" : "flex";
+        localStorage.setItem("statsVisible", !visible);
+    });
+    if (localStorage.getItem("statsVisible") === "true") {
+        document.getElementById("statsBar").style.display = "flex";
+    }
+
     // Sidebar toggle
     document.getElementById("sidebarToggle").addEventListener("click", toggleSidebar);
     document.addEventListener("keydown", (e) => {

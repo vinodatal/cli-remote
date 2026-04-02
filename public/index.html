@@ -30,8 +30,8 @@
             </div>
         </header>
 
-        <!-- Stats Bar -->
-        <div class="stats-bar">
+        <!-- Stats Bar (hidden by default, toggle with 📊) -->
+        <div class="stats-bar" id="statsBar" style="display:none">
             <div class="stat-card">
                 <div class="stat-value" id="statTotal">–</div>
                 <div class="stat-label">Total Sessions</div>
@@ -63,6 +63,7 @@
                     <div style="display:flex;gap:6px">
                         <button id="chatBtn" class="icon-btn chat-btn" title="Launch Copilot" onclick="openTerminal('copilot')">🤖</button>
                         <button id="terminalBtn" class="icon-btn terminal-btn" title="Open Shell">⌨</button>
+                        <button id="statsToggle" class="icon-btn" title="Toggle stats">📊</button>
                         <button id="refreshBtn" class="icon-btn" title="Refresh">↻</button>
                     </div>
                 </div>

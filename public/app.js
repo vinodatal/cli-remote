@@ -443,6 +443,26 @@ async function openTerminal(mode = "shell", opts = {}) {
     term.loadAddon(fit);
     term.loadAddon(new window.WebLinksAddon.WebLinksAddon());
 
+    // Bell: beep sound + browser notification
+    term.onBell(() => {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.frequency.value = 880;
+            gain.gain.value = 0.15;
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.15);
+        } catch {}
+        if (Notification.permission === "granted") {
+            new Notification("Terminal Bell", { body: entry.label, icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🔔</text></svg>" });
+        }
+    });
+    if (Notification.permission === "default") Notification.requestPermission();
+
     // Create pane
     const pane = document.createElement("div");
     pane.className = "term-pane";

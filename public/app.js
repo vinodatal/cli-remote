@@ -175,7 +175,13 @@ async function selectSession(id) {
 
 function renderDetail(s) {
     const panel = document.getElementById("detailPanel");
+
+    // On mobile, show detail and hide list
+    const layout = document.querySelector(".main-layout");
+    if (window.innerWidth <= 900) layout.classList.add("show-detail");
+
     panel.innerHTML = `
+        <div class="mobile-back" onclick="document.querySelector('.main-layout').classList.remove('show-detail')">← Back to sessions</div>
         <div class="detail-header">
             <div class="detail-title">
                 ${s.isActive ? '<span class="active-dot" style="width:10px;height:10px;border-radius:50%;background:#3fb950;box-shadow:0 0 8px #3fb950;display:inline-block"></span>' : ""}

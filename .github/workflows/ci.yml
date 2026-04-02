@@ -1,9 +1,6 @@
 name: CI
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:  # Manual trigger only — GitHub-hosted runners disabled for EMU repos
 jobs:
   test:
     runs-on: ubuntu-latest

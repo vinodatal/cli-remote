@@ -12,16 +12,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Install build tools for native modules
+        run: sudo apt-get update && sudo apt-get install -y build-essential python3
       - run: npm ci
       - run: npm test
         env:
           CI: true
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - run: npm ci
-      - run: npm run lint

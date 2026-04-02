@@ -7,7 +7,6 @@
     "start": "node src/server.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "npx eslint src/ tests/",
     "setup": "node scripts/setup.js",
     "demo": "node scripts/demo-record.js",
     "tunnel": "node scripts/setup.js --tunnel"

@@ -41,15 +41,18 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ── WebSocket ──
+let wsRetries = 0;
 function setupWebSocket() {
     const proto = location.protocol === "https:" ? "wss:" : "ws:";
     const ws = new WebSocket(`${proto}//${location.host}`);
     const badge = document.getElementById("connectionBadge");
 
-    ws.onopen = () => { badge.textContent = "● live"; badge.classList.add("connected"); };
+    ws.onopen = () => { badge.textContent = "● live"; badge.classList.add("connected"); wsRetries = 0; };
+    ws.onerror = () => {};
     ws.onclose = () => {
         badge.textContent = "disconnected"; badge.classList.remove("connected");
-        setTimeout(setupWebSocket, 3000);
+        if (wsRetries < 10) { wsRetries++; setTimeout(setupWebSocket, Math.min(1000 * Math.pow(2, wsRetries), 30000)); }
+        else { badge.textContent = "offline"; }
     };
     ws.onmessage = (e) => {
         const msg = JSON.parse(e.data);
@@ -88,7 +91,7 @@ async function loadSessions() {
         const data = await fetchJson(`/api/sessions?${params}`);
         renderSessionList(data.sessions, data.total);
     } catch (err) {
-        list.innerHTML = `<div class="loading" style="animation:none">Failed to load: ${err.message}</div>`;
+        list.innerHTML = `<div class="loading" style="animation:none">⚠ Failed to load sessions</div>`;
     }
 }
 
@@ -166,8 +169,8 @@ function renderDetail(s) {
                 <span>🔄 Updated ${timeAgo(s.updated_at)}</span>
             </div>
             <div style="margin-top:8px;display:flex;gap:8px">
-                <button class="copilot-launch-btn" onclick="openTerminal('copilot', { sessionId: '${s.id}', sessionLabel: '${escAttr(s.summary || s.branch || s.id.slice(0,8))}' })">🤖 Resume in Copilot</button>
-                <button class="copilot-launch-btn shell" onclick="openTerminal('shell', { sessionId: '${s.id}', sessionLabel: '${escAttr(s.summary || s.branch || s.id.slice(0,8))}' })">⌨ Open Shell Here</button>
+                <button class="copilot-launch-btn" onclick="openTerminal('copilot', { sessionId: '${escAttr(s.id)}', sessionLabel: '${escAttr(s.summary || s.branch || s.id.slice(0,8))}' })">🤖 Resume in Copilot</button>
+                <button class="copilot-launch-btn shell" onclick="openTerminal('shell', { sessionId: '${escAttr(s.id)}', sessionLabel: '${escAttr(s.summary || s.branch || s.id.slice(0,8))}' })">⌨ Open Shell Here</button>
             </div>
         </div>
         <div class="tabs">

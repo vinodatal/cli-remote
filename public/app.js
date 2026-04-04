@@ -396,7 +396,7 @@ function setupTouchBar(term) {
         if (btn.dataset.ctrl === "true" || ctrlActive) {
             // Send Ctrl+key (char code 1-26)
             const code = key.toLowerCase().charCodeAt(0) - 96;
-            if (code > 0 && code <= 26) term.focus(), sendToActiveTerm(String.fromCharCode(code));
+            if (code > 0 && code <= 26) sendToActiveTerm(String.fromCharCode(code));
             if (ctrlActive) {
                 ctrlActive = false;
                 const ctrlBtn = newBar.querySelector('[data-modifier="ctrl"]');
@@ -419,8 +419,7 @@ function setupTouchBar(term) {
             const data = keyMap[key] || key;
             sendToActiveTerm(data);
         }
-
-        term.focus();
+        // Don't focus terminal — avoids mobile keyboard popup
     });
 }
 

@@ -938,7 +938,7 @@ button:active { transform: scale(0.97); }
 
     /* Terminal panel taller on mobile */
     .term-panel { height: 60vh; }
-    .term-panel.maximized { height: 100vh; }
+    .term-panel.maximized { height: 100vh; top: 0; }
     .term-tab { padding: 4px 8px; font-size: 11px; }
     .term-tab-bar { height: 44px; padding: 0 4px; }
     .term-tab-actions { gap: 2px; }

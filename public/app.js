@@ -429,6 +429,20 @@ function sendToActiveTerm(data) {
         entry.ws.send(JSON.stringify({ type: "terminal:input", data }));
     }
 }
+
+function changeFontSize(delta) {
+    const entry = terminals.get(activeTabId);
+    if (!entry) return;
+    const current = entry.xterm.options.fontSize || 14;
+    const newSize = Math.max(8, Math.min(28, current + delta));
+    entry.xterm.options.fontSize = newSize;
+    localStorage.setItem("termFontSize", newSize);
+    entry.fitAddon.fit();
+    // Sync PTY size
+    if (entry.ws && entry.ws.readyState === 1) {
+        entry.ws.send(JSON.stringify({ type: "terminal:resize", cols: entry.xterm.cols, rows: entry.xterm.rows }));
+    }
+}
 function truncate(s, n) { return s && s.length > n ? s.slice(0, n) + "\n\n… [truncated]" : s || ""; }
 function formatNumber(n) { return n >= 1000 ? (n / 1000).toFixed(1) + "k" : String(n); }
 function estimateTokens(s) { return s ? formatNumber(s.length) : "0"; }
@@ -464,6 +478,8 @@ function setupTerminal() {
     document.getElementById("termNewCopilot").addEventListener("click", () => openTerminal("copilot"));
     document.getElementById("termMinMax").addEventListener("click", toggleTermSize);
     document.getElementById("termClose").addEventListener("click", closeActiveTab);
+    document.getElementById("termFontUp").addEventListener("click", () => changeFontSize(2));
+    document.getElementById("termFontDown").addEventListener("click", () => changeFontSize(-2));
 }
 
 async function openTerminal(mode = "shell", opts = {}) {
@@ -501,7 +517,7 @@ async function openTerminal(mode = "shell", opts = {}) {
 
     // Create xterm
     const term = new window.Terminal({
-        cursorBlink: true, fontSize: 14,
+        cursorBlink: true, fontSize: parseInt(localStorage.getItem("termFontSize")) || 14,
         fontFamily: "'Cascadia Code', 'Fira Code', Consolas, monospace",
         theme: XTERM_THEMES[getTheme()],
         allowProposedApi: true,

@@ -411,6 +411,10 @@ function setupTouchBar(term) {
                 "ArrowDown": "\x1b[B",
                 "ArrowRight": "\x1b[C",
                 "ArrowLeft": "\x1b[D",
+                "PageUp": "\x1b[5~",
+                "PageDown": "\x1b[6~",
+                "Home": "\x1b[H",
+                "End": "\x1b[F",
             };
             const data = keyMap[key] || key;
             sendToActiveTerm(data);

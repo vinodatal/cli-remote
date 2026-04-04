@@ -34,14 +34,23 @@ const SCENES = [
     { id: "08", narration: "Switch between light and dark themes. Your preference is saved automatically.", action: "theme" },
     { id: "09", narration: "Open a persistent remote terminal. It survives browser disconnects, so you can reconnect from any device.", action: "terminal" },
     { id: "10", narration: "Launch multiple terminal tabs. Each gets a unique color. Run Copilot and shell sessions side by side.", action: "multitab" },
-    { id: "11", narration: "Maximize the terminal for full screen focus. The Copilot Session Portal. Access your agent from anywhere.", action: "maximize" },
+    { id: "11", narration: "Maximize the terminal for full screen focus.", action: "maximize" },
+];
+
+const MOBILE_SCENES = [
+    { id: "m01", narration: "The portal is fully mobile responsive. Here's how it looks on an iPhone.", action: "mobile-list" },
+    { id: "m02", narration: "Tap a session to see full details with a back button for easy navigation.", action: "mobile-detail" },
+    { id: "m03", narration: "The terminal has a touch key bar at the bottom. Page up, page down, escape, tab, control keys, all at your fingertips.", action: "mobile-terminal" },
+    { id: "m04", narration: "Adjust font size with A minus and A plus. Use the keyboard button to toggle the on-screen keyboard.", action: "mobile-font" },
+    { id: "m05", narration: "The Copilot Session Portal. Access your agent from anywhere.", action: "mobile-maximize" },
 ];
 
 async function generateAudio() {
     fs.mkdirSync(AUDIO_DIR, { recursive: true });
     console.log("🎙️  Generating narration audio...\n");
 
-    for (const scene of SCENES) {
+    const allScenes = [...SCENES, ...MOBILE_SCENES];
+    for (const scene of allScenes) {
         const audioPath = path.join(AUDIO_DIR, `${scene.id}.mp3`);
         if (fs.existsSync(audioPath)) { console.log(`  ✓ ${scene.id} (cached)`); continue; }
 
@@ -213,22 +222,115 @@ async function main() {
     }
 
     await sleep(1000);
+    const desktopVideoPath = await page.video().path();
     await context.close();
     await browser.close();
 
-    // Rename raw video
-    const videos = fs.readdirSync(OUTPUT_DIR).filter(f => f.endsWith(".webm"));
-    const rawVideo = path.join(OUTPUT_DIR, "raw-video.webm");
-    if (videos.length > 0) {
-        const src = path.join(OUTPUT_DIR, videos[videos.length - 1]);
-        if (fs.existsSync(rawVideo)) fs.unlinkSync(rawVideo);
-        fs.renameSync(src, rawVideo);
+    // ── Step 2b: Record mobile video ──
+    console.log("\n📱 Recording mobile demo...\n");
+
+    const mobileBrowser = await chromium.launch({ headless: true });
+    const mobileContext = await mobileBrowser.newContext({
+        viewport: { width: 393, height: 852 },
+        deviceScaleFactor: 3,
+        isMobile: true,
+        hasTouch: true,
+        recordVideo: { dir: OUTPUT_DIR, size: { width: 393, height: 852 } },
+        colorScheme: "dark",
+    });
+
+    const mobilePage = await mobileContext.newPage();
+
+    // Inject caption overlay for mobile too
+    await mobilePage.addInitScript(() => {
+        window.addEventListener("DOMContentLoaded", () => {
+            const style = document.createElement("style");
+            style.textContent = `
+                @keyframes captionIn { 0% { transform: translateX(-50%) translateY(20px); opacity: 0; } 100% { transform: translateX(-50%) translateY(0); opacity: 1; } }
+                @keyframes captionOut { 0% { opacity: 1; } 100% { opacity: 0; } }
+                #__caption__ { position: fixed; top: 40px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: #fff; padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; font-family: -apple-system, sans-serif; z-index: 2147483646; pointer-events: none; white-space: nowrap; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); display: none; }
+            `;
+            document.head.appendChild(style);
+            const caption = document.createElement("div"); caption.id = "__caption__"; document.body.appendChild(caption);
+        });
+    });
+
+    async function mobileCaption(text, durationMs = 2500) {
+        await mobilePage.evaluate(({ text, dur }) => {
+            const el = document.getElementById("__caption__");
+            el.textContent = text; el.style.display = "block"; el.style.animation = "captionIn 0.3s ease forwards";
+            setTimeout(() => { el.style.animation = "captionOut 0.3s ease forwards"; }, dur - 300);
+            setTimeout(() => { el.style.display = "none"; }, dur);
+        }, { text, dur: durationMs });
+        await sleep(400);
     }
 
-    // Step 3: Merge audio with video using ffmpeg
+    for (const scene of MOBILE_SCENES) {
+        const audioDur = await getAudioDuration(path.join(AUDIO_DIR, `${scene.id}.mp3`));
+        const waitMs = Math.max(audioDur * 1000, 2500);
+        console.log(`  ${scene.id} ${scene.action} (${audioDur.toFixed(1)}s)`);
+
+        switch (scene.action) {
+            case "mobile-list":
+                await mobilePage.goto(BASE_URL);
+                await mobilePage.waitForSelector(".session-item", { timeout: 10000 });
+                await mobileCaption("📱 Mobile View", waitMs);
+                await sleep(waitMs - 400);
+                await mobilePage.screenshot({ path: path.join(OUTPUT_DIR, "mobile-list.png") });
+                break;
+            case "mobile-detail":
+                await mobileCaption("📋 Session Detail", waitMs);
+                await mobilePage.click(".session-item");
+                await mobilePage.waitForSelector(".detail-header", { timeout: 5000 });
+                await sleep(waitMs - 400);
+                await mobilePage.screenshot({ path: path.join(OUTPUT_DIR, "mobile-detail.png") });
+                break;
+            case "mobile-terminal":
+                await mobileCaption("⌨ Touch Key Bar", waitMs);
+                // Header buttons hidden on mobile — use session's shell button
+                await mobilePage.waitForSelector(".copilot-launch-btn.shell", { timeout: 5000 })
+                    .then(btn => btn.click())
+                    .catch(() => { console.warn("    ⚠ Shell button not found — skipping terminal scene"); });
+                await sleep(waitMs - 400);
+                await mobilePage.screenshot({ path: path.join(OUTPUT_DIR, "mobile-terminal.png") });
+                break;
+            case "mobile-font":
+                await mobileCaption("🔤 Font Size A-/A+", waitMs);
+                if (await mobilePage.$("#termFontDown")) {
+                    await mobilePage.click("#termFontDown");
+                    await sleep(500);
+                    await mobilePage.click("#termFontDown");
+                } else { console.warn("    ⚠ Font buttons not visible — terminal may not be open"); }
+                await sleep(waitMs - 1000);
+                await mobilePage.screenshot({ path: path.join(OUTPUT_DIR, "mobile-font.png") });
+                break;
+            case "mobile-maximize":
+                await mobileCaption("▲ Full Screen", waitMs);
+                if (await mobilePage.$("#termMinMax")) {
+                    await mobilePage.click("#termMinMax");
+                } else { console.warn("    ⚠ Maximize button not visible"); }
+                await sleep(waitMs - 400);
+                await mobilePage.screenshot({ path: path.join(OUTPUT_DIR, "mobile-maximized.png") });
+                break;
+        }
+    }
+
+    await sleep(1000);
+    const mobileVideoPath = await mobilePage.video().path();
+    await mobileContext.close();
+    await mobileBrowser.close();
+
+    // ── Step 3: Merge audio + video ──
+    const rawDesktop = path.join(OUTPUT_DIR, "raw-desktop.webm");
+    const rawMobile = path.join(OUTPUT_DIR, "raw-mobile.webm");
+    if (fs.existsSync(rawDesktop)) fs.unlinkSync(rawDesktop);
+    if (fs.existsSync(rawMobile)) fs.unlinkSync(rawMobile);
+    fs.renameSync(desktopVideoPath, rawDesktop);
+    fs.renameSync(mobileVideoPath, rawMobile);
+
     console.log("\n🎬 Merging audio + video with ffmpeg...\n");
 
-    // Concatenate all audio files
+    // Desktop: merge audio
     const audioList = path.join(AUDIO_DIR, "concat.txt");
     const concatContent = SCENES.map(s => `file '${s.id}.mp3'`).join("\n");
     fs.writeFileSync(audioList, concatContent);
@@ -236,15 +338,30 @@ async function main() {
     const mergedAudio = path.join(AUDIO_DIR, "narration.mp3");
     execSync(`ffmpeg -y -f concat -safe 0 -i "${audioList}" -c copy "${mergedAudio}"`, { stdio: "pipe" });
 
-    // Merge video + audio
     const finalVideo = path.join(OUTPUT_DIR, "demo.webm");
-    execSync(`ffmpeg -y -i "${rawVideo}" -i "${mergedAudio}" -c:v copy -c:a libopus -shortest "${finalVideo}"`, { stdio: "pipe" });
+    if (fs.existsSync(rawDesktop)) {
+        execSync(`ffmpeg -y -i "${rawDesktop}" -i "${mergedAudio}" -c:v copy -c:a libopus -shortest "${finalVideo}"`, { stdio: "pipe" });
+        try { fs.unlinkSync(rawDesktop); } catch {}
+    }
+
+    // Mobile: merge audio
+    const mobileAudioList = path.join(AUDIO_DIR, "mobile-concat.txt");
+    const mobileConcatContent = MOBILE_SCENES.map(s => `file '${s.id}.mp3'`).join("\n");
+    fs.writeFileSync(mobileAudioList, mobileConcatContent);
+
+    const mobileMergedAudio = path.join(AUDIO_DIR, "mobile-narration.mp3");
+    execSync(`ffmpeg -y -f concat -safe 0 -i "${mobileAudioList}" -c copy "${mobileMergedAudio}"`, { stdio: "pipe" });
+
+    const mobileVideo = path.join(OUTPUT_DIR, "mobile-demo.webm");
+    if (fs.existsSync(rawMobile)) {
+        execSync(`ffmpeg -y -i "${rawMobile}" -i "${mobileMergedAudio}" -c:v copy -c:a libopus -shortest "${mobileVideo}"`, { stdio: "pipe" });
+        try { fs.unlinkSync(rawMobile); } catch {}
+    }
 
     // Cleanup
-    try { fs.unlinkSync(rawVideo); } catch {}
-
     const pngs = fs.readdirSync(OUTPUT_DIR).filter(f => f.endsWith(".png"));
-    console.log(`✅ Video: docs/demo/demo.webm (with narration!)`);
+    console.log(`✅ Desktop video: docs/demo/demo.webm`);
+    console.log(`✅ Mobile video: docs/demo/mobile-demo.webm`);
     console.log(`✅ Screenshots: ${pngs.length} files`);
     console.log("\nDone! 🎉\n");
 }

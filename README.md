@@ -232,3 +232,7 @@ The portal automatically discovers:
 ## 📄 License
 
 MIT
+
+## 🙏 Acknowledgments
+
+- [TermBeam](https://github.com/dorlugasigal/TermBeam) — inspired the mobile touch key bar, security headers, and terminal UX patterns

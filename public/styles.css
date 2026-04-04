@@ -766,6 +766,9 @@ button:active { transform: scale(0.97); }
     flex-shrink: 0;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    position: sticky;
+    bottom: 0;
+    z-index: 910;
 }
 .touch-bar::-webkit-scrollbar { display: none; }
 .touch-bar button {

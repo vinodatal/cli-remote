@@ -381,6 +381,22 @@ function setupTouchBar(term) {
         const btn = e.target.closest("button");
         if (!btn) return;
         e.preventDefault();
+        e.stopPropagation();
+
+        // Keyboard toggle — focus/blur terminal textarea
+        if (btn.dataset.action === "keyboard") {
+            const entry = terminals.get(activeTabId);
+            if (!entry) return;
+            const textarea = entry.xterm.textarea;
+            if (textarea && document.activeElement === textarea) {
+                textarea.blur();
+                btn.style.background = "";
+            } else {
+                entry.xterm.focus();
+                btn.style.background = "var(--accent-dim)";
+            }
+            return;
+        }
 
         // Ctrl modifier toggle
         if (btn.dataset.modifier === "ctrl") {

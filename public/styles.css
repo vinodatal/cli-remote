@@ -756,6 +756,47 @@ button:active { transform: scale(0.97); }
 .chat-send-btn:hover { opacity: .85; }
 .chat-send-btn:disabled { opacity: .4; cursor: default; }
 
+/* ── Touch Key Bar (mobile terminal) ── */
+.touch-bar {
+    display: none;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    padding: 4px 6px;
+    gap: 4px;
+    flex-shrink: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.touch-bar::-webkit-scrollbar { display: none; }
+.touch-bar button {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: 'SFMono-Regular', Consolas, monospace;
+    cursor: pointer;
+    white-space: nowrap;
+    min-width: 40px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+.touch-bar button:active { background: var(--accent-dim); border-color: var(--accent); }
+.touch-bar button.special { color: var(--accent); font-weight: 600; }
+.touch-bar .separator { width: 1px; background: var(--border); margin: 4px 2px; flex-shrink: 0; }
+
+@media (max-width: 900px) {
+    .touch-bar { display: flex; }
+}
+@media (pointer: coarse) {
+    .touch-bar { display: flex; }
+}
+
 /* ── Terminal Panel (docked bottom, multi-tab) ── */
 .term-panel {
     position: fixed;

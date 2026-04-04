@@ -364,9 +364,67 @@ function toggleSidebar() {
     const layout = document.querySelector(".main-layout");
     layout.classList.toggle("sidebar-collapsed");
     localStorage.setItem("sidebarCollapsed", layout.classList.contains("sidebar-collapsed"));
-    // Refit active terminal if any
     const entry = terminals.get(activeTabId);
     if (entry) setTimeout(() => entry.fitAddon.fit(), 350);
+}
+
+// ── Touch Key Bar ──
+function setupTouchBar(term) {
+    const bar = document.getElementById("touchBar");
+    let ctrlActive = false;
+
+    // Remove old listeners (re-entry safe)
+    const newBar = bar.cloneNode(true);
+    bar.parentNode.replaceChild(newBar, bar);
+
+    newBar.addEventListener("click", (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        e.preventDefault();
+
+        // Ctrl modifier toggle
+        if (btn.dataset.modifier === "ctrl") {
+            ctrlActive = !ctrlActive;
+            btn.classList.toggle("active", ctrlActive);
+            btn.style.background = ctrlActive ? "var(--accent-dim)" : "";
+            return;
+        }
+
+        const key = btn.dataset.key;
+        if (!key) return;
+
+        if (btn.dataset.ctrl === "true" || ctrlActive) {
+            // Send Ctrl+key (char code 1-26)
+            const code = key.toLowerCase().charCodeAt(0) - 96;
+            if (code > 0 && code <= 26) term.focus(), sendToActiveTerm(String.fromCharCode(code));
+            if (ctrlActive) {
+                ctrlActive = false;
+                const ctrlBtn = newBar.querySelector('[data-modifier="ctrl"]');
+                if (ctrlBtn) { ctrlBtn.classList.remove("active"); ctrlBtn.style.background = ""; }
+            }
+        } else {
+            // Map special keys to escape sequences
+            const keyMap = {
+                "Escape": "\x1b",
+                "Tab": "\t",
+                "ArrowUp": "\x1b[A",
+                "ArrowDown": "\x1b[B",
+                "ArrowRight": "\x1b[C",
+                "ArrowLeft": "\x1b[D",
+            };
+            const data = keyMap[key] || key;
+            sendToActiveTerm(data);
+        }
+
+        term.focus();
+    });
+}
+
+function sendToActiveTerm(data) {
+    const entry = terminals.get(activeTabId);
+    if (entry && entry.ws && entry.ws.readyState === 1) {
+        entry.ws.send(JSON.stringify({ type: "terminal:input", data }));
+    }
 }
 function truncate(s, n) { return s && s.length > n ? s.slice(0, n) + "\n\n… [truncated]" : s || ""; }
 function formatNumber(n) { return n >= 1000 ? (n / 1000).toFixed(1) + "k" : String(n); }
@@ -525,6 +583,9 @@ async function openTerminal(mode = "shell", opts = {}) {
     const resizeObs = new ResizeObserver(() => { if (pane.classList.contains("active")) fit.fit(); });
     resizeObs.observe(pane);
     entry.resizeObs = resizeObs;
+
+    // Wire up touch key bar
+    setupTouchBar(term);
 
     renderTabs();
 }

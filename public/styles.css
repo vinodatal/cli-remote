@@ -810,9 +810,9 @@ button:active { transform: scale(0.97); }
     transition: height .3s cubic-bezier(.4, 0, .2, 1);
     box-shadow: 0 -4px 20px rgba(0,0,0,.2);
 }
-.term-panel.maximized { height: 100vh; }
+.term-panel.maximized { height: 100vh; height: 100dvh; top: 0; }
 .term-panel.minimized { height: 36px; }
-.term-panel.minimized .term-content { display: none; }
+.term-panel.minimized .term-content, .term-panel.minimized .touch-bar { display: none; }
 
 .term-tab-bar {
     display: flex;
@@ -866,7 +866,7 @@ button:active { transform: scale(0.97); }
 
 .term-tab-actions { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
 
-.term-content { flex: 1; overflow: hidden; position: relative; }
+.term-content { flex: 1; overflow: hidden; position: relative; min-height: 0; }
 .term-content .term-pane {
     position: absolute;
     inset: 0;

@@ -171,7 +171,7 @@ async function main() {
             case "search":
                 await showCaption("🔍 Search Sessions", waitMs);
                 await smoothClick("#globalSearch", 200);
-                await page.fill("#globalSearch", "SecurityMarketplace"); await sleep(waitMs - 800);
+                await page.fill("#globalSearch", "my-project"); await sleep(waitMs - 800);
                 await page.screenshot({ path: path.join(OUTPUT_DIR, `${scene.id}-search.png`) });
                 await page.fill("#globalSearch", ""); await sleep(300);
                 break;

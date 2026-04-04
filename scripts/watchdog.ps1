@@ -1,7 +1,7 @@
 # Copilot Session Portal — Watchdog
 # Checks if portal + tunnel are running, restarts if not.
 
-$ProjectDir = "C:\Users\vinodata\Projects\CLIRemote"
+$ProjectDir = Split-Path -Parent $PSScriptRoot
 $Port = 3456
 $TunnelName = "copilot-portal"
 $LogDir = Join-Path $ProjectDir "logs"
